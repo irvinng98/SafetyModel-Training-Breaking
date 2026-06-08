@@ -10,4 +10,4 @@ pip install accelerate==0.34.0
 pip install langchain==0.3.0
 pip install langgraph==0.2.0
 pip install langchain-community
-pip install datasets scikit-learn pandas numpy wandb jupyter
+pip install datasets scikit-learn pandas numpy wandb jupyter requests

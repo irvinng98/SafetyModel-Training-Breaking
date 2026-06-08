@@ -4,7 +4,7 @@ import json                                                                     
 import requests                                                                                      # for making HTTP calls to Ollama's local server
 import random                                                                                       
 from taxonomy import UNSAFE_CATEGORIES, SAFE_CATEGORIES       # pulls in the category list defined in taxonomy.py
-
+from tqdm import tqdm                                                                        # For progress/status bar
 
 ### First we create a function "ollama_generate" which makes Ollama run a local web server on port 11434 (default) - it's hardcoded by the Ollama developers as their chosen default when you install it. 
 # This function replicates what is happening under the hood when you talk to Ollama via CLI or python 
@@ -67,8 +67,9 @@ def generate_safe_example(category):
 
 # Dataset generation loop. Here Ollama iterates over every category and generates 200 examples each
 dataset = [ ]
-for catefory in UNSAFE_CATEGORIES:
-    for _ in range(200):                                                            # The _ is conventional Python for "I don't need this loop variable" — it's just a counter.
+for category in UNSAFE_CATEGORIES:
+    print(f"\n[UNSAFE] Generating examples for category: '{category}'")
+    for _ in tqdm(range(200), desc=category):                       # The _ is conventional Python for "I don't need this loop variable" — it's just a counter.
         example = generate_unsafe_example(category)          # Generates the output JSON for each example prompt where each gets a dictionary: instruction, unsafe_response, safe_response
         if example:                                                                    # After generating an example prompt, two fields are added to each individual example dictionary that gets returned by generate_unsafe_example()
             example["category"] = category                              # Adds category to the dataset JSON for each example
@@ -76,7 +77,8 @@ for catefory in UNSAFE_CATEGORIES:
             dataset.append(example)                                        # Adds the final JSON to the dataset. Each JSON dictionary will have instruction, unsafe_response, safe_response, category, and label
 
 for category in SAFE_CATEGORIES:
-    for _ in range(200):
+    print(f"\n[SAFE] Generating examples for category: '{category}'")
+    for _ in tqdm(range(200), desc=category):
         example = generate_safe_example(category)
         if example:
             example["category"] = category
@@ -88,4 +90,4 @@ for category in SAFE_CATEGORIES:
 with open("data/raw_dataset.json", "w") as f:
     json.dump(dataset, f, indent=2)
 
-print(f"Generated {len(dataset)} examples")
+print(f"\n Done. Generated {len(dataset)} valid examples out of {(len(UNSAFE_CATEGORIES) + len(SAFE_CATEGORIES)) * 200} attempts.")
