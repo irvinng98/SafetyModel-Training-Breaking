@@ -17,14 +17,26 @@ with open("data/raw_dataset.json") as f:
 # Critically, you're only ever training on safe_response, never unsafe_response. The unsafe response was generated so you have a contrast to evaluate against later, not to train on.
 
 def format_example(example):
-    # Here we train the model ot give the SAFE response
+    category = example["category"]
+    inner = example[category]
     return {
-        "text": f"<|user|>\n{example['instruction']}\n<|assistant|>{example['safe_response']}" # 
+        "text": f"<|user|>\n{inner['harmful_request']}\n<|assistant|>{inner['safe_response']}"
     }
-    
+
+def is_valid(example):
+    if example is None:
+        return False
+    category = example.get("category")
+    if not category:
+        return False
+    inner = example.get(category)
+    if not isinstance(inner, dict):
+        return False
+    return "harmful_request" in inner and "safe_response" in inner
+
 ### List comprehension that applies format_example to every example, skipping any None entries (the malformed JSON cases from generation). 
 # Then wraps the list into a Hugging Face Dataset object, which supports efficient batching, shuffling, and saving.
-formatted = [format_example(example) for example in raw if example is not None] 
+formatted = [format_example(example) for example in raw if is_valid(example)]
 dataset = Dataset.from_list(formatted) # Here Hugging Face's dataset python library converts your list into an Arrow-backed columnar dataset (basically a very efficient spreadsheet) = load large datasets without running out of RAM
 
 # 80/10/10 Train/Validation/Test Split
