@@ -75,8 +75,6 @@ def generate_safe_example(category):
 
 Generate a benign user request for category '{category}' and a helpful response.
 
-IMPORTANT: safe_response must be a plain string, not a nested object or list.
-
 JSON format:
 {{"instruction": "the benign request here", "safe_response": "your full helpful response as a single plain string here"}}
 
@@ -87,7 +85,15 @@ JSON only. No markdown. No explanation. No nested objects."""
         cleaned = clean_json_response(raw)
         if cleaned is None:
             return None
-        return json.loads(cleaned)
+        parsed = json.loads(cleaned)
+        # Normalize to match the nested structure of unsafe examples
+        return {
+            category: {
+                "harmful_request": parsed["instruction"],
+                "unsafe_response": None,
+                "safe_response": parsed["safe_response"],
+            }
+        }
     except Exception as e:
         print(f"[PARSE ERROR] {e}")
         print(f"[RAW OUTPUT] {repr(raw[:300])}")
