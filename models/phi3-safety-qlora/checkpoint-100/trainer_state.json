@@ -1,0 +1,69 @@
+{
+  "best_metric": 0.9229429960250854,
+  "best_model_checkpoint": "models/phi3-safety-qlora/checkpoint-100",
+  "epoch": 0.74487895716946,
+  "eval_steps": 100,
+  "global_step": 100,
+  "is_hyper_param_search": false,
+  "is_local_process_zero": true,
+  "is_world_process_zero": true,
+  "log_history": [
+    {
+      "epoch": 0.186219739292365,
+      "grad_norm": 0.4876842796802521,
+      "learning_rate": 0.0001,
+      "loss": 1.6835,
+      "step": 25
+    },
+    {
+      "epoch": 0.37243947858473,
+      "grad_norm": 0.5476533770561218,
+      "learning_rate": 0.0002,
+      "loss": 1.1969,
+      "step": 50
+    },
+    {
+      "epoch": 0.5586592178770949,
+      "grad_norm": 0.4293298125267029,
+      "learning_rate": 0.00018579545454545454,
+      "loss": 0.9613,
+      "step": 75
+    },
+    {
+      "epoch": 0.74487895716946,
+      "grad_norm": 0.4872671067714691,
+      "learning_rate": 0.00017159090909090908,
+      "loss": 0.9048,
+      "step": 100
+    },
+    {
+      "epoch": 0.74487895716946,
+      "eval_loss": 0.9229429960250854,
+      "eval_runtime": 29.9616,
+      "eval_samples_per_second": 8.945,
+      "eval_steps_per_second": 1.135,
+      "step": 100
+    }
+  ],
+  "logging_steps": 25,
+  "max_steps": 402,
+  "num_input_tokens_seen": 0,
+  "num_train_epochs": 3,
+  "save_steps": 100,
+  "stateful_callbacks": {
+    "TrainerControl": {
+      "args": {
+        "should_epoch_stop": false,
+        "should_evaluate": false,
+        "should_log": false,
+        "should_save": true,
+        "should_training_stop": false
+      },
+      "attributes": {}
+    }
+  },
+  "total_flos": 3268887854579712.0,
+  "train_batch_size": 2,
+  "trial_name": null,
+  "trial_params": null
+}

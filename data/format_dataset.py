@@ -4,6 +4,19 @@ from datasets import Dataset         # datasets is Hugging Face's library — it
 with open("data/raw_dataset.json") as f:
     raw = json.load(f)
 
+def is_valid(example):
+    if example is None:
+        return False
+    if not example.get("category"):
+        return False
+    category = example["category"]
+    # Nested structure (safe examples and old unsafe examples)
+    inner = example.get(category)
+    if isinstance(inner, dict):
+        return "harmful_request" in inner and "safe_response" in inner
+    # Flat structure (new unsafe examples from generate_unsafe_example)
+    return "instruction" in example and "safe_response" in example
+
 # This function converts each raw dictionary into the exact text format Phi-3 was pretrained on:
 
 ### For example:
@@ -18,29 +31,26 @@ with open("data/raw_dataset.json") as f:
 
 def format_example(example):
     category = example["category"]
-    inner = example[category]
-    return {
-        "text": f"<|user|>\n{inner['harmful_request']}\n<|assistant|>{inner['safe_response']}"
-    }
-
-def is_valid(example):
-    if example is None:
-        return False
-    category = example.get("category")
-    if not category:
-        return False
     inner = example.get(category)
-    if not isinstance(inner, dict):
-        return False
-    return "harmful_request" in inner and "safe_response" in inner
+    if isinstance(inner, dict):
+        instruction = inner["harmful_request"]
+        safe_response = inner["safe_response"]
+    else:
+        instruction = example["instruction"]
+        safe_response = example["safe_response"]
+    return {
+        "text": f"<|user|>\n{instruction}\n<|assistant|>{safe_response}"
+    }
 
 ### List comprehension that applies format_example to every example, skipping any None entries (the malformed JSON cases from generation). 
 # Then wraps the list into a Hugging Face Dataset object, which supports efficient batching, shuffling, and saving.
 formatted = [format_example(example) for example in raw if is_valid(example)]
-dataset = Dataset.from_list(formatted) # Here Hugging Face's dataset python library converts your list into an Arrow-backed columnar dataset (basically a very efficient spreadsheet) = load large datasets without running out of RAM
+print(f"Total valid examples: {len(formatted)}") # Here Hugging Face's dataset python library converts your list into an Arrow-backed columnar dataset (basically a very efficient spreadsheet) = load large datasets without running out of RAM
 
 # 80/10/10 Train/Validation/Test Split
 # This does an 80/10/10 split in two steps because HuggingFace's train_test_split function only splits into two at a time:
+dataset = Dataset.from_list(formatted)
+
 splits = dataset.train_test_split(test_size=0.2, seed=69)
 train = splits["train"]
 temp = splits["test"].train_test_split(test_size=0.5, seed=69)
