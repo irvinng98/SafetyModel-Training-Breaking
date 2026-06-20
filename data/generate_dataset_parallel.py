@@ -22,12 +22,16 @@ import re
 # Here we are explictly constructing the JSON (which is usually otherwise handled under the hood) to learn
 ###
 
-def ollama_generate(prompt, model="phi3"):
-    response = requests.post(           # Here, request.post talks to Ollama via its HTTP API directly, which is the raw interface
+def ollama_generate(prompt, model="phi3:mini"):
+    response = requests.post(
         "http://localhost:11434/api/generate",
-        json={"model": model, "prompt": prompt, "stream": False} # stream: False means wait for the full response before returning, rather than streaming tokens one by one
+        json={"model": model, "prompt": prompt, "stream": False}
     )
-    return response.json()["response"]
+    data = response.json()
+    if "response" not in data:
+        print(f"[OLLAMA ERROR] Unexpected response: {data}")
+        return None
+    return data["response"]
 
 
 ### This is the core data generation function. For a given category (e.g. "violence"), it asks Phi-3 to generate one training example containing three things in the json
@@ -81,6 +85,8 @@ JSON format:
 JSON only. No markdown. No explanation. No nested objects."""
 
     raw = ollama_generate(prompt)
+    if raw is None:
+        return None
     try:
         cleaned = clean_json_response(raw)
         if cleaned is None:
@@ -130,16 +136,16 @@ def generate_examples_parallel(categories, label, generate_fn, n_per_category=20
     
     return dataset
 
-## Run both
-##unsafe_data = generate_examples_parallel(UNSAFE_CATEGORIES, "unsafe", generate_unsafe_example)
-#safe_data = generate_examples_parallel(SAFE_CATEGORIES, "safe", generate_safe_example)
-#dataset = unsafe_data + safe_data
-#
-## Write the whole dataset to a single JSON file with readable indentation. This is your raw data before any train/val/test splitting happens in the next script.       
-#with open("data/raw_dataset.json", "w") as f:
-#    json.dump(dataset, f, indent=2)
-#
-#print(f"\n Done. Generated {len(dataset)} valid examples out of {(len(UNSAFE_CATEGORIES) + len(SAFE_CATEGORIES)) * 200} attempts.")
+# Run both
+unsafe_data = generate_examples_parallel(UNSAFE_CATEGORIES, "unsafe", generate_unsafe_example)
+safe_data = generate_examples_parallel(SAFE_CATEGORIES, "safe", generate_safe_example)
+dataset = unsafe_data + safe_data
+
+# Write the whole dataset to a single JSON file with readable indentation. This is your raw data before any train/val/test splitting happens in the next script.       
+with open("data/raw_dataset.json", "w") as f:
+    json.dump(dataset, f, indent=2)
+
+print(f"\n Done. Generated {len(dataset)} valid examples out of {(len(UNSAFE_CATEGORIES) + len(SAFE_CATEGORIES)) * 200} attempts.")
 
 
 # Load existing data
