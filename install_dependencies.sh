@@ -1,5 +1,5 @@
-conda create -n redteam python=3.11
-conda activate redteam
+#conda create -n redteam python=3.11
+#conda activate redteam
 
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 pip install transformers==4.44.0
